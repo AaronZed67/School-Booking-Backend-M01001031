@@ -1,9 +1,8 @@
 
-
 require("dotenv").config();
 
 const express = require("express");
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 
 const app = express();
 const port = 3000;
@@ -42,6 +41,34 @@ app.post("/orders", async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send("Error saving order");
+    }
+});
+
+app.put("/lessons/:_id", async (req, res) => {
+    try {
+        const lessonId = req.params._id;
+
+        if (!ObjectId.isValid(lessonId)) {
+            return res.status(400).send("Invalid lesson ID");
+        }
+
+        const collection = db.collection("lessons");
+        const query = { _id: new ObjectId(lessonId) };
+        const updates = { $set: req.body };
+
+        const result = await collection.updateOne(query, updates);
+
+        if (result.matchedCount === 0) {
+            return res.status(404).send("Lesson not found");
+        }
+
+        res.json({
+            message: "Lesson updated successfully!",
+            modifiedCount: result.modifiedCount
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Error updating lesson");
     }
 });
 
